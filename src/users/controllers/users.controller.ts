@@ -6,54 +6,47 @@ import {
   Delete,
   Param,
   Body,
+  Put,
 } from '@nestjs/common';
-import { UserMapper } from '../mappers/user.mappers';
-import { PartialUpdateUserDto } from '../dtos/partial-update-user.dto';
-import { User } from '../entities/user.entity';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { PartialUpdateUserDto } from '../dtos/partial-update-user.dto';
+import { UsersService } from '../services/users.service';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 
 @Controller('usuarios')
 export class UsersController {
-  private users: Array<User> = [];
-  private currentId = 1;
+
+  constructor(private readonly service: UsersService) {
+
+  }
 
   @Get()
   findAll() {
-    return this.users.map((u) => UserMapper.toResponseDto(u));
+    return this.service.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    const user = this.users.find((u) => u.id === Number(id));
-    if (!user) return { error: 'User not found' };
-
-    return UserMapper.toResponseDto(user);
+    return this.service.findOne(Number(id));
   }
 
   @Post()
   create(@Body() dto: CreateUserDto) {
-    const entity = UserMapper.toEntity(this.currentId++, dto);
-    this.users.push(entity);
-    return UserMapper.toResponseDto(entity);
+    return this.service.create(dto);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.service.update(Number(id), dto);
   }
 
   @Patch(':id')
   partialUpdate(@Param('id') id: string, @Body() dto: PartialUpdateUserDto) {
-    const user = this.users.find((u) => u.id === Number(id));
-    if (!user) return { error: 'User not found' };
-
-    if (dto.name !== undefined) user.name = dto.name;
-    if (dto.email !== undefined) user.email = dto.email;
-
-    return UserMapper.toResponseDto(user);
+    return this.service.partialUpdate(Number(id), dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    const exists = this.users.some((u) => u.id === Number(id));
-    if (!exists) return { error: 'User not found' };
-
-    this.users = this.users.filter((u) => u.id !== Number(id));
-    return { message: 'Deleted successfully' };
+  delete(@Param('id') id: string) {
+    return this.service.delete(Number(id));
   }
 }
