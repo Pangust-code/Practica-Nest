@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from '../entities/user.entity';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
@@ -37,7 +37,7 @@ export class UsersService {
     const entity = await this.userRepository.findOne({ where: { id } });
 
     if (!entity) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
     return User.fromEntity(entity).toResponseDto();
@@ -47,12 +47,19 @@ export class UsersService {
    * Crear usuario (flujo funcional)
    */
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
-    // Flujo funcional: DTO → Model → Entity → Save → Model → DTO
-    const user = User.fromDto(dto);           // DTO → Domain
-    const entity = user.toEntity();            // Domain → Entity
-    const saved = await this.userRepository.save(entity); // Persistir
+    const existingUser = await this.userRepository.findOne({ 
+      where: { email: dto.email } 
+    });
     
-    return User.fromEntity(saved).toResponseDto(); // Entity → Domain → DTO
+    if (existingUser) {
+      throw new ConflictException(
+        `El email ${dto.email} ya está registrado`
+      );
+    }
+    const user = User.fromDto(dto);
+    const entity = user.toEntity();
+    const saved = await this.userRepository.save(entity);
+    return User.fromEntity(saved).toResponseDto();
   }
 
   /**

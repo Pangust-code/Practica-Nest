@@ -11,7 +11,21 @@ export class User {
     public email: string,
     public password: string,
     public createdAt: Date,
-  ) {}
+  ) {
+    if (!name || name.trim().length < 3) {
+      throw new Error("Nombre inválido");
+    }
+
+    if (!email || !email.includes("@")) {
+      throw new Error("Email inválido");
+    }
+
+    if (!password || password.length < 8) {
+      throw new Error("Password inválido");
+    }
+  }
+
+
 
   // ==================== FACTORY METHODS ====================
 
@@ -65,8 +79,7 @@ export class User {
       id: this.id,
       name: this.name,
       email: this.email,
-      password: "****", // Oculta el password
-      createdAt: this.createdAt,
+      createdAt: this.createdAt.toISOString(),
     };
     // NO incluye password
   }
