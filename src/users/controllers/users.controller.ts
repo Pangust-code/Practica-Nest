@@ -12,6 +12,7 @@ import { CreateUserDto } from '../dtos/create-user.dto';
 import { PartialUpdateUserDto } from '../dtos/partial-update-user.dto';
 import { UsersService } from '../services/users.service';
 import { UpdateUserDto } from '../dtos/update-user.dto';
+import { UserResponseDto } from '../dtos/user-response.dto';
 
 @Controller('usuarios')
 export class UsersController {
@@ -26,27 +27,33 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(Number(id));
+  async findOne(@Param('id') id: number): Promise<UserResponseDto> {
+    return this.service.findOne(id);
+    // ← Si no existe, el servicio lanza NotFoundException
+    // ← El filter se encarga del resto
   }
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.service.create(dto);
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    const created = await this.service.create(createUserDto);
+    return created;
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.service.update(Number(id), dto);
   }
 
   @Patch(':id')
-  partialUpdate(@Param('id') id: string, @Body() dto: PartialUpdateUserDto) {
+  async partialUpdate(
+    @Param('id') id: string,
+    @Body() dto: PartialUpdateUserDto,
+  ) {
     return this.service.partialUpdate(Number(id), dto);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return this.service.delete(Number(id));
   }
 }

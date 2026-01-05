@@ -1,4 +1,3 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ProductsEntity } from '../entities/products.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -7,16 +6,19 @@ import { UpdateProductsDto } from '../dtos/update-products.dto';
 import { CreateProductsDto } from '../dtos/create-products.dto';
 import { Products } from '../models/products.model';
 import { PartialUpdateProductsDto } from '../dtos/partial-update-products.dto';
+import { Injectable } from '@nestjs/common';
+import { NotFoundException } from 'src/exceptions/domain/not-found.exception';
+import { ConflictException } from 'src/exceptions/domain/conflict.exception';
 
 @Injectable()
 export class ProductsService {
-    constructor(
-        @InjectRepository(ProductsEntity)
-        private readonly productsRepository: Repository<ProductsEntity>,
-    ) {}
-    /**
-   * Obtener todos los productos (enfoque funcional)
-   */
+  constructor(
+    @InjectRepository(ProductsEntity)
+    private readonly productsRepository: Repository<ProductsEntity>,
+  ) { }
+  /**
+ * Obtener todos los productos (enfoque funcional)
+ */
   async findAll(): Promise<ProductsResponseDto[]> {
     // 1. Repository → Entities
     const entities = await this.productsRepository.find();
@@ -34,7 +36,7 @@ export class ProductsService {
     const entity = await this.productsRepository.findOne({ where: { id } });
 
     if (!entity) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
 
     return Products.fromEntity(entity).toResponseDto();
@@ -45,9 +47,13 @@ export class ProductsService {
    */
   async create(dto: CreateProductsDto): Promise<ProductsResponseDto> {
 
-  if (await this.productsRepository.exist({ where: { name: dto.name } })) {
-  throw new BadRequestException("El nombre ya está registrado");
-  }
+    const existingProduct = await this.productsRepository.findOne({ 
+      where: { name: dto.name } 
+    });
+
+    if (existingProduct) {
+      throw new ConflictException(`El nombre: ${dto.name} ya está registrado`);
+    }
     // Flujo funcional: DTO → Model → Entity → Save → Model → DTO
     const products = Products.fromDto(dto);           // DTO → Domain
     const entity = products.toEntity();            // Domain → Entity
@@ -63,7 +69,7 @@ export class ProductsService {
     const entity = await this.productsRepository.findOne({ where: { id } });
 
     if (!entity) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
 
     // Flujo funcional con transformaciones
@@ -72,7 +78,7 @@ export class ProductsService {
       .toEntity();                           // Domain → Entity
 
     const saved = await this.productsRepository.save(updated);
-    
+
     return Products.fromEntity(saved).toResponseDto();
   }
 
@@ -83,7 +89,7 @@ export class ProductsService {
     const entity = await this.productsRepository.findOne({ where: { id } });
 
     if (!entity) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
 
     const updated = Products.fromEntity(entity)
@@ -91,7 +97,7 @@ export class ProductsService {
       .toEntity();
 
     const saved = await this.productsRepository.save(updated);
-    
+
     return Products.fromEntity(saved).toResponseDto();
   }
 
@@ -102,7 +108,7 @@ export class ProductsService {
     const result = await this.productsRepository.delete(id);
 
     if (result.affected === 0) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
     }
   }
 

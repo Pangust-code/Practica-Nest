@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { UsersModule } from './users/users.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AllExceptionsFilter } from './exceptions/filters/all-exceptions.filter.js';
 
 @Module({
   
@@ -23,7 +24,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     })
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: 'APP_FILTER',
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule {
   

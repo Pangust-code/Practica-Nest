@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserEntity } from '../entities/user.entity';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
@@ -7,6 +7,8 @@ import { Repository } from 'typeorm/browser/repository/Repository.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserResponseDto } from '../dtos/user-response.dto';
 import { User } from '../models/user.model';
+import { ConflictException } from 'src/exceptions/domain/conflict.exception';
+import { NotFoundException } from 'src/exceptions/domain/not-found.exception';
 
 
 @Injectable()
@@ -34,13 +36,13 @@ export class UsersService {
    * Obtener un usuario por ID (enfoque funcional con manejo de errores)
    */
   async findOne(id: number): Promise<UserResponseDto> {
-    const entity = await this.userRepository.findOne({ where: { id } });
-
-    if (!entity) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    const user = await this.userRepository.findOne({ where: { id } });
+    
+    if (!user) {
+      throw new NotFoundException(`Usuario no encontrado con ID: ${id}`);
     }
-
-    return User.fromEntity(entity).toResponseDto();
+    
+    return User.fromEntity(user).toResponseDto();
   }
 
   /**

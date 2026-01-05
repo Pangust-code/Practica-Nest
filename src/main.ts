@@ -1,10 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './exceptions/filters/all-exceptions.filter.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Registrar el filter global
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Configurar ValidationPipe para DTOs
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,        // elimina propiedades no permitidas

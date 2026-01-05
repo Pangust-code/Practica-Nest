@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { CreateProductsDto } from '../dtos/create-products.dto';
 import { PartialUpdateProductsDto } from '../dtos/partial-update-products.dto';
 import { ProductsService } from '../services/products.service';
+import { ProductsResponseDto } from '../dtos/products-response.dto';
+import { UpdateProductsDto } from '../dtos/update-products.dto';
 
 @Controller('productos')
 export class ProductsController {
@@ -10,27 +12,41 @@ export class ProductsController {
 
 
   @Get()
-  findAll() {
+  async findAll(): Promise<ProductsResponseDto[]> {
     return this.productsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(Number(id));
+  async findOne(@Param('id') id: number): Promise<ProductsResponseDto> {
+    return this.productsService.findOne(id);
+    // ← Si no existe, el servicio lanza NotFoundException
+    // ← El filter se encarga del resto
   }
 
   @Post()
-  create(@Body() dto: CreateProductsDto) {
-    return this.productsService.create(dto);
+  async create(@Body() createUserDto: CreateProductsDto): Promise<ProductsResponseDto> {
+    const created = await this.productsService.create(createUserDto);
+    return created;
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductsDto,
+  ) {
+    return this.productsService.update(Number(id), dto);
   }
 
   @Patch(':id')
-  partialUpdate(@Param('id') id: string, @Body() dto: PartialUpdateProductsDto) {
+  async partialUpdate(
+    @Param('id') id: string,
+    @Body() dto: PartialUpdateProductsDto,
+  ) {
     return this.productsService.partialUpdate(Number(id), dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return this.productsService.delete(Number(id));
   }
 }
